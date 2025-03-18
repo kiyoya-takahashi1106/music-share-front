@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useAuthState } from "@/contexts/auth-context"
+import { useAuthState } from "@/contexts/authContext"
 import { AtSign, User, Lock, Music, ArrowRight, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -27,7 +27,7 @@ export default function SignUpPage() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
 
@@ -44,13 +44,12 @@ export default function SignUpPage() {
       return
     }
 
-    // サインアップ処理
-    const result = SignUpFunction(formData)
+    // サインアップ処理: 非同期処理にawaitを追加
+    const result = await SignUpFunction(formData)
     if (!result) {
       setError("サインアップに失敗しました")
       setIsSubmitting(false)
     }
-    // 成功時はauth-contextでリダイレクトされるので、ここでは何もしない
   }
 
   return (
@@ -100,7 +99,7 @@ export default function SignUpPage() {
                 />
               </div>
 
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                   <AtSign className="h-5 w-5" />
                 </div>
@@ -114,7 +113,7 @@ export default function SignUpPage() {
                   value={formData.userId}
                   onChange={handleChange}
                 />
-              </div>
+              </div> */}
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
