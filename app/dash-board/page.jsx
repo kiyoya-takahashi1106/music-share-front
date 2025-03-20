@@ -1,15 +1,15 @@
 "use client"
 
 import Header from "@/components/header"
-import PublicRooms from "@/components/public-rooms"
+import PublicRooms from "@/components/publicRooms"
 
 const DashBoard = () => {
   return (
     <div>
       <Header />
       <main style={mainStyle}>
-        <h1 style={titleStyle}>Spotify共有ルームへようこそ</h1>
-        <p style={descriptionStyle}>友達と音楽を共有しましょう！</p>
+        {/* <h1 style={titleStyle}>Spotify共有ルームへようこそ</h1>
+        <p style={descriptionStyle}>友達と音楽を共有しましょう！</p> */}
         <PublicRooms />
       </main>
     </div>

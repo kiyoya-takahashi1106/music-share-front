@@ -2,16 +2,16 @@
 
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { signUp, login, logout } from "../lib/authLib";
+// 修正: login ではなく loginApi、他も同様に名前を合わせる
+import { signUpApi, loginApi, logoutApi } from "../lib/authLib";
 
-// 初期状態
 const initialAuthState = {
   isLogin: false,
   userId: null,
   userName: null,
   userIcon: null,
-  is_verified: false, // 認証状態を追加
-  services: [], // 認証サービスの情報を配列で保持
+  is_verified: false,
+  services: [],
 };
 
 const AuthContext = createContext(null);
@@ -28,7 +28,7 @@ const AuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await signUp(signUpInfo);
+      const response = await signUpApi(signUpInfo);
       if (response) {
         setAuthState({
           isLogin: true,
@@ -36,8 +36,7 @@ const AuthProvider = ({ children }) => {
           userName: response.user_name,
           userIcon: response.profile_image_url,
           is_verified: false,
-          services: [
-          ],
+          services: [],
         });
         router.push("/dash-board");
         console.log("サインアップしました");
@@ -52,16 +51,15 @@ const AuthProvider = ({ children }) => {
   // ログイン
   const loginFunction = async (loginInfo) => {
     try {
-      const response = await login(loginInfo);
+      const response = await loginApi(loginInfo);
       if (response) {
         setAuthState({
           isLogin: true,
           userId: response.user_id,
           userName: response.user_name,
           userIcon: response.profile_image_url,
-          is_verified: response.is_verified, // 認証状態を追加
-          services: [
-          ],
+          is_verified: response.is_verified,
+          services: [],
         });
         router.push("/dash-board");
         console.log("ログインしました");
@@ -76,7 +74,7 @@ const AuthProvider = ({ children }) => {
   // ログアウト
   const logoutFunction = async () => {
     try {
-      await logout();
+      await logoutApi();
       setAuthState(initialAuthState);
       router.push("/lp");
       console.log("ログアウトしました");
@@ -85,7 +83,6 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // サービスを追加する関数（例: Spotify以外のサービスの認証情報を追加）
   const addService = (serviceName, accessToken, refreshToken) => {
     setAuthState((prevState) => ({
       ...prevState,

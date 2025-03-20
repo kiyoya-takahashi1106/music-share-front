@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/components/header"
-import PublicRooms from "@/components/public-rooms"
+import PublicRooms from "@/components/publicRooms"
 // import { useRouter } from "next/navigation";
 
 const Page = () => {
