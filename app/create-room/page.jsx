@@ -106,7 +106,6 @@ const CreateRoom = () => {
       }
       createRoomData(newRoom)
       setIsLoading(false)
-      console.log("Room created:", newRoom)
       // 成功時の処理（リダイレクトなど）
     }, 1000)
   }
