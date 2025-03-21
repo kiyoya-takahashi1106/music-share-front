@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuthState } from "@/contexts/auth-context"
+import { useAuthState } from "@/contexts/authContext"
 import { User, X, Settings, Bookmark, Music, ListMusic, Users, Home, LogOut } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { useAuthState } from "@/contexts/auth-context"
+import { useAuthState } from "@/contexts/authContext"
 import { User } from "lucide-react"
 import UserMenuModal from "./modal/user-menu.jsx"
 

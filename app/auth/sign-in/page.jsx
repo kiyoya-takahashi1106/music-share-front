@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useAuthState } from "@/contexts/auth-context"
+import { useAuthState } from "@/contexts/authContext"
 import { AtSign, Lock, Music, ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
 
@@ -36,12 +36,12 @@ export default function LoginPage() {
     }
 
     // ログイン処理
-    const result = loginFunction(formData)
+    const result = await loginFunction(formData)
     if (!result) {
       setError("ログインに失敗しました")
       setIsSubmitting(false)
     }
-    // 成功時はauth-contextでリダイレクトされるので、ここでは何もしない
+    // 成功時はauthContext内でリダイレクトされるので、ここでは何もしない
   }
 
   return (
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-5">
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                   <AtSign className="h-5 w-5" />
                 </div>
@@ -89,7 +89,7 @@ export default function LoginPage() {
                   value={formData.userId}
                   onChange={handleChange}
                 />
-              </div>
+              </div> */}
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
-// ルーム情報アップロード用のフックへ変更
-import { useRoomState } from "@/contexts/myRoom-context"
+import { useState, useEffect } from "react"
+import { useAuthState } from "@/contexts/authContext"
+import { useMyRoomState } from "@/contexts/myRoomContext"
 import Header from "@/components/header"
+import { Music, Search, Play, Check, ChevronDown, X } from "lucide-react"
 
 const CreateRoom = () => {
   const [roomName, setRoomName] = useState("")
@@ -11,191 +12,368 @@ const CreateRoom = () => {
   const [passphrase, setPassphrase] = useState("")
   const [genre, setGenre] = useState("")
   const [maxParticipants, setMaxParticipants] = useState(2)
-  const { uploadRoomData } = useRoomState()
+  const { authState } = useAuthState()
+  const { createRoomData } = useMyRoomState()
+
+  // プレイリスト関連の状態
+  const [playlists, setPlaylists] = useState([])
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isPlaylistDropdownOpen, setIsPlaylistDropdownOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // モックのプレイリストデータを読み込む
+  useEffect(() => {
+    // 実際のアプリではSpotify APIからデータを取得する
+    const mockPlaylists = [
+      {
+        id: "1",
+        name: "お気に入りの曲",
+        imageUrl: "https://i.scdn.co/image/ab67706f00000002ca5a7517156021292e5663a4",
+        description: "よく聴く曲のコレクション",
+        firstSong: {
+          id: "3n3Ppam7vgaVa1iaRUc9Lp",
+          name: "お気に入りの一曲",
+        },
+      },
+      {
+        id: "2",
+        name: "J-POP ヒット曲",
+        imageUrl: "https://i.scdn.co/image/ab67706f000000025551996f500ba876bda73fa5",
+        description: "日本の最新ヒット曲",
+        firstSong: {
+          id: "7ouMYWpwJ422jRcDASZB7P",
+          name: "J-POPの代表曲",
+        },
+      },
+      {
+        id: "3",
+        name: "ワークアウト",
+        imageUrl: "https://i.scdn.co/image/ab67706f000000026b78142f31f3a7f7ea9566ca",
+        description: "運動中に聴くための曲",
+        firstSong: {
+          id: "0VjIjW4GlUZAMYd2vXMi3b",
+          name: "ワークアウトの一曲",
+        },
+      },
+      {
+        id: "4",
+        name: "ドライブミュージック",
+        imageUrl: "https://i.scdn.co/image/ab67706f00000002724554ed6bed6f051d9b0bfc",
+        description: "ドライブに最適な曲",
+        firstSong: {
+          id: "2X485T9Z5Ly0xyaghN73ed",
+          name: "ドライブにぴったりの曲",
+        },
+      },
+    ];    
+    setPlaylists(mockPlaylists)
+  }, [])
+
+  // 検索結果をフィルタリング
+  const filteredPlaylists =
+    searchTerm.trim() === ""
+      ? playlists
+      : playlists.filter(
+          (playlist) =>
+            playlist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            playlist.description.toLowerCase().includes(searchTerm.toLowerCase()),
+        )
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    console.log("Room created:", { roomName, isPublic, passphrase, genre, maxParticipants })
-    updateRoomState()
-  }
-
-  const updateRoomState = () => {
-    const newRoom = {
-      roomName, // 新しいルーム名
-      isPublic,
-      passphrase: isPublic ? "" : passphrase,
-      genre,
-      maxParticipants,
-      startTime: new Date(),
-      participants: [],
-      host: "", // 必要に応じて現在のユーザーIDなどを設定
-      nowPlaying: { title: null, artist: null },
-      playlist: []
+    if (!selectedPlaylist) {
+      alert("プレイリストを選択してください")
+      return
     }
-    // コンテキストに新しいルーム情報をアップロード
-    uploadRoomData(newRoom)
+
+    setIsLoading(true)
+
+    // 送信処理（モック）
+    setTimeout(() => {
+      const newRoom = {
+        room_name: roomName,
+        is_public: isPublic,
+        room_password: isPublic ? null : passphrase,
+        genre: genre,
+        max_participants: maxParticipants,
+        host_user_id: authState.userId,
+        host_user_name: authState.userName,
+        playing_playlist_id: selectedPlaylist.id,
+        playing_playlist_name: selectedPlaylist.name,
+        playing_song_id: selectedPlaylist.firstSong.id,
+        playing_song_name: selectedPlaylist.firstSong.name, 
+      }
+      createRoomData(newRoom)
+      setIsLoading(false)
+      console.log("Room created:", newRoom)
+      // 成功時の処理（リダイレクトなど）
+    }, 1000)
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-white text-zinc-900">
       <Header />
-      <main style={mainStyle}>
-        <h1 style={titleStyle}>ルーム作成</h1>
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <div style={inputGroupStyle}>
-            <label htmlFor="roomName" style={labelStyle}>
-              ルーム名
-            </label>
-            <input
-              type="text"
-              id="roomName"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label style={labelStyle}>ルームタイプ</label>
-            <div style={radioGroupStyle}>
-              <label style={radioLabelStyle}>
+      <main className="max-w-3xl mx-auto px-4 py-8 mt-6">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2 flex items-center justify-center">
+            <Music className="text-green-500 mr-3" size={32} />
+            新しいルームを作成
+          </h1>
+          <p className="text-zinc-600 mt-2">お気に入りの音楽をみんなで共有しましょう</p>
+        </div>
+
+        <div className="bg-zinc-800 rounded-xl p-6 shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ルーム基本情報 */}
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="roomName" className="block text-sm font-medium text-zinc-300 mb-1">
+                  ルーム名
+                </label>
                 <input
-                  type="radio"
-                  value="public"
-                  checked={isPublic}
-                  onChange={() => setIsPublic(true)}
-                  style={radioInputStyle}
+                  type="text"
+                  id="roomName"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  required
+                  className="w-full bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="例: 金曜の夜のチルアウト"
                 />
-                パブリック
-              </label>
-              <label style={radioLabelStyle}>
-                <input
-                  type="radio"
-                  value="private"
-                  checked={!isPublic}
-                  onChange={() => setIsPublic(false)}
-                  style={radioInputStyle}
-                />
-                プライベート
-              </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">ルームタイプ</label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      value="public"
+                      checked={isPublic}
+                      onChange={() => setIsPublic(true)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-5 h-5 rounded-full border ${isPublic ? "bg-green-500 border-green-500" : "bg-zinc-700 border-zinc-500"} flex items-center justify-center mr-2`}
+                    >
+                      {isPublic && <Check size={12} className="text-black" />}
+                    </div>
+                    <span>パブリック</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      value="private"
+                      checked={!isPublic}
+                      onChange={() => setIsPublic(false)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-5 h-5 rounded-full border ${!isPublic ? "bg-green-500 border-green-500" : "bg-zinc-700 border-zinc-500"} flex items-center justify-center mr-2`}
+                    >
+                      {!isPublic && <Check size={12} className="text-black" />}
+                    </div>
+                    <span>プライベート</span>
+                  </label>
+                </div>
+              </div>
+
+              {!isPublic && (
+                <div>
+                  <label htmlFor="passphrase" className="block text-sm font-medium text-zinc-300 mb-1">
+                    合言葉
+                  </label>
+                  <input
+                    type="text"
+                    id="passphrase"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    required
+                    className="w-full bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="友達に教える合言葉"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="genre" className="block text-sm font-medium text-zinc-300 mb-1">
+                    音楽のジャンル
+                  </label>
+                  <input
+                    type="text"
+                    id="genre"
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    className="w-full bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="例: J-POP, ロック, ジャズ"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="maxParticipants" className="block text-sm font-medium text-zinc-300 mb-1">
+                    最大参加人数
+                  </label>
+                  <input
+                    type="number"
+                    id="maxParticipants"
+                    value={maxParticipants}
+                    onChange={(e) => setMaxParticipants(Number(e.target.value))}
+                    min="2"
+                    max="10"
+                    required
+                    className="w-full bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          {!isPublic && (
-            <div style={inputGroupStyle}>
-              <label htmlFor="passphrase" style={labelStyle}>
-                合言葉
-              </label>
-              <input
-                type="text"
-                id="passphrase"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                required
-                style={inputStyle}
-              />
+
+            {/* プレイリスト選択セクション */}
+            <div className="pt-4 border-t border-zinc-700">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <Music className="text-green-500 mr-2" size={20} />
+                プレイリストを選択
+              </h2>
+
+              {/* 選択されたプレイリスト表示 */}
+              {selectedPlaylist ? (
+                <div className="mb-4 bg-zinc-700/50 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <img
+                      src={selectedPlaylist.imageUrl || "/placeholder.svg"}
+                      alt={selectedPlaylist.name}
+                      className="w-16 h-16 object-cover rounded-md mr-4"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-bold">{selectedPlaylist.name}</h3>
+                      <p className="text-sm text-zinc-400">
+                        {selectedPlaylist.tracks}曲 • {selectedPlaylist.owner}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlaylist(null)}
+                      className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-600"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative mb-4">
+                  <div
+                    className="flex items-center justify-between bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 cursor-pointer"
+                    onClick={() => setIsPlaylistDropdownOpen(!isPlaylistDropdownOpen)}
+                  >
+                    <div className="flex items-center text-zinc-400">
+                      <Music size={18} className="mr-2" />
+                      <span>プレイリストを選択してください</span>
+                    </div>
+                    <ChevronDown
+                      size={18}
+                      className={`transition-transform ${isPlaylistDropdownOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
+
+                  {/* プレイリスト選択ドロップダウン */}
+                  {isPlaylistDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full bg-zinc-800 border border-zinc-700 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                      <div className="p-2 sticky top-0 bg-zinc-800 border-b border-zinc-700">
+                        <div className="relative">
+                          <Search
+                            size={16}
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400"
+                          />
+                          <input
+                            type="text"
+                            placeholder="プレイリストを検索..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-zinc-700 border border-zinc-600 rounded-full py-1.5 pl-9 pr-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-green-500"
+                          />
+                        </div>
+                      </div>
+
+                      {filteredPlaylists.length === 0 ? (
+                        <div className="p-4 text-center text-zinc-400">プレイリストが見つかりません</div>
+                      ) : (
+                        <div>
+                          {filteredPlaylists.map((playlist) => (
+                            <div
+                              key={playlist.id}
+                              className="p-2 hover:bg-zinc-700 cursor-pointer"
+                              onClick={() => {
+                                setSelectedPlaylist(playlist)
+                                setIsPlaylistDropdownOpen(false)
+                                setSearchTerm("")
+                              }}
+                            >
+                              <div className="flex items-center">
+                                <img
+                                  src={playlist.imageUrl || "/placeholder.svg"}
+                                  alt={playlist.name}
+                                  className="w-12 h-12 object-cover rounded-md mr-3"
+                                />
+                                <div>
+                                  <h3 className="font-medium">{playlist.name}</h3>
+                                  <p className="text-xs text-zinc-400">
+                                    {playlist.tracks}曲 • {playlist.owner}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!selectedPlaylist && (
+                <p className="text-sm text-zinc-400 mb-4">
+                  ルームで共有したいSpotifyのプレイリストを選択してください。
+                  参加者はあなたが選んだプレイリストの曲を一緒に聴くことができます。
+                </p>
+              )}
             </div>
-          )}
-          <div style={inputGroupStyle}>
-            <label htmlFor="genre" style={labelStyle}>
-              音楽のジャンル
-            </label>
-            <input
-              type="text"
-              id="genre"
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <div style={inputGroupStyle}>
-            <label htmlFor="maxParticipants" style={labelStyle}>
-              最大参加人数
-            </label>
-            <input
-              type="number"
-              id="maxParticipants"
-              value={maxParticipants}
-              onChange={(e) => setMaxParticipants(Number(e.target.value))}
-              min="2"
-              max="10"
-              required
-              style={inputStyle}
-            />
-          </div>
-          <button type="submit" style={buttonStyle}>
-            ルームを作成
-          </button>
-        </form>
+
+            {/* 送信ボタン */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isLoading || !selectedPlaylist}
+                className={`w-full flex items-center justify-center rounded-full py-3 px-6 font-medium text-lg transition-colors ${
+                  isLoading || !selectedPlaylist
+                    ? "bg-zinc-600 text-zinc-400 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-400 text-black"
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-transparent animate-spin mr-2"></div>
+                    作成中...
+                  </>
+                ) : (
+                  <>
+                    <Play size={20} className="mr-2" fill="currentColor" />
+                    ルームを作成
+                  </>
+                )}
+              </button>
+
+              {!selectedPlaylist && (
+                <p className="text-center text-sm text-red-400 mt-2">
+                  ルームを作成するにはプレイリストを選択してください
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
       </main>
     </div>
   )
 }
 
-const mainStyle = {
-  maxWidth: "600px",
-  margin: "2rem auto",
-  padding: "0 1rem",
-}
-
-const titleStyle = {
-  color: "#1DB954",
-  fontSize: "2rem",
-  marginBottom: "1.5rem",
-  textAlign: "center",
-}
-
-const formStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "1.5rem",
-}
-
-const inputGroupStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.5rem",
-}
-
-const labelStyle = {
-  color: "#333",
-  fontSize: "1rem",
-  fontWeight: "bold",
-}
-
-const inputStyle = {
-  padding: "0.5rem",
-  fontSize: "1rem",
-  borderRadius: "5px",
-  border: "1px solid #1DB954",
-  width: "100%",
-  boxSizing: "border-box",
-}
-
-const radioGroupStyle = {
-  display: "flex",
-  gap: "1rem",
-}
-
-const radioLabelStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-}
-
-const radioInputStyle = {
-  margin: 0,
-}
-
-const buttonStyle = {
-  backgroundColor: "#1DB954",
-  color: "#FFFFFF",
-  border: "none",
-  padding: "0.75rem 1rem",
-  borderRadius: "20px",
-  fontSize: "1rem",
-  fontWeight: "bold",
-  cursor: "pointer",
-  transition: "background-color 0.3s",
-}
-
 export default CreateRoom
+
