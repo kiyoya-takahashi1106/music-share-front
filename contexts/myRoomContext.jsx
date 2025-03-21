@@ -29,7 +29,7 @@ const MyRoomProvider = ({ children }) => {
     createdAt: null,
     // playing_service: null,
     // ここからはredisにもらうデータ
-    rooms_status: null,
+    roomStatus: null,
     playingPlaylistId: null,
     playingSongId: null,
     updateSongAt: null,
@@ -40,6 +40,7 @@ const MyRoomProvider = ({ children }) => {
   const getRoomDetails = async (roomId) => {
     try {
       const roomData = await fetchRoomDetails(roomId);
+      console.log(roomData)
       setRoom({ isJoined: true, ...roomData });
     } catch (error) {
       console.error("Error fetching room details:", error);
@@ -50,7 +51,6 @@ const MyRoomProvider = ({ children }) => {
   const createRoomData = async (roomData) => {
     try {
       const createdRoom = await createRoom(roomData);
-      console.log("createdRoom", createdRoom);
       setRoom({ isJoined: true, ...createdRoom });
     } catch (error) {
       console.error("Error creating room:", error);
