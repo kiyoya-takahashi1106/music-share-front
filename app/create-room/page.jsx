@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, } from "react"
+import { useRouter } from "next/navigation";
 import { useAuthState } from "@/contexts/authContext"
 import { useMyRoomState } from "@/contexts/myRoomContext"
 import Header from "@/components/header"
 import { Music, Search, Play, Check, ChevronDown, X } from "lucide-react"
+
 
 const CreateRoom = () => {
   const [roomName, setRoomName] = useState("")
@@ -12,8 +14,9 @@ const CreateRoom = () => {
   const [passphrase, setPassphrase] = useState("")
   const [genre, setGenre] = useState("")
   const [maxParticipants, setMaxParticipants] = useState(2)
+  const router = useRouter();
   const { authState } = useAuthState()
-  const { createRoomData } = useMyRoomState()
+  const { room, createRoomData } = useMyRoomState()
 
   // プレイリスト関連の状態
   const [playlists, setPlaylists] = useState([])
@@ -66,7 +69,7 @@ const CreateRoom = () => {
           name: "ドライブにぴったりの曲",
         },
       },
-    ];    
+    ]
     setPlaylists(mockPlaylists)
   }, [])
 
@@ -89,24 +92,24 @@ const CreateRoom = () => {
 
     setIsLoading(true)
 
-    // 送信処理（モック）
+    // 送信処理
     setTimeout(() => {
       const newRoom = {
-        room_name: roomName,
-        is_public: isPublic,
-        room_password: isPublic ? null : passphrase,
+        roomName: roomName,
+        isPublic: isPublic,
+        roomPassword: isPublic ? null : passphrase,
         genre: genre,
-        max_participants: maxParticipants,
-        host_user_id: authState.userId,
-        host_user_name: authState.userName,
-        playing_playlist_id: selectedPlaylist.id,
-        playing_playlist_name: selectedPlaylist.name,
-        playing_song_id: selectedPlaylist.firstSong.id,
-        playing_song_name: selectedPlaylist.firstSong.name, 
+        maxParticipants: maxParticipants,
+        hostUserId: authState.userId,
+        hostUserName: authState.userName,
+        playingPlaylistId: selectedPlaylist.id,
+        playingPlaylistName: selectedPlaylist.name,
+        playingSongId: selectedPlaylist.firstSong.id,
+        playingSongName: selectedPlaylist.firstSong.name,
       }
       createRoomData(newRoom)
       setIsLoading(false)
-      // 成功時の処理（リダイレクトなど）
+      router.push(`/room/${room.roomId}`)
     }, 1000)
   }
 
@@ -122,12 +125,12 @@ const CreateRoom = () => {
           <p className="text-zinc-600 mt-2">お気に入りの音楽をみんなで共有しましょう</p>
         </div>
 
-        <div className="bg-zinc-800 rounded-xl p-6 shadow-lg">
+        <div className="bg-zinc-800 rounded-xl p-6 shadow-lg text-white">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* ルーム基本情報 */}
             <div className="space-y-6">
               <div>
-                <label htmlFor="roomName" className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="roomName" className="block text-sm font-medium text-white mb-1">
                   ルーム名
                 </label>
                 <input
@@ -142,9 +145,9 @@ const CreateRoom = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">ルームタイプ</label>
+                <label className="block text-sm font-medium text-white mb-2">ルームタイプ</label>
                 <div className="flex space-x-4">
-                  <label className="flex items-center cursor-pointer">
+                  <label className="flex items-center cursor-pointer text-white">
                     <input
                       type="radio"
                       value="public"
@@ -159,7 +162,7 @@ const CreateRoom = () => {
                     </div>
                     <span>パブリック</span>
                   </label>
-                  <label className="flex items-center cursor-pointer">
+                  <label className="flex items-center cursor-pointer text-white">
                     <input
                       type="radio"
                       value="private"
@@ -179,7 +182,7 @@ const CreateRoom = () => {
 
               {!isPublic && (
                 <div>
-                  <label htmlFor="passphrase" className="block text-sm font-medium text-zinc-300 mb-1">
+                  <label htmlFor="passphrase" className="block text-sm font-medium text-white mb-1">
                     合言葉
                   </label>
                   <input
@@ -196,7 +199,7 @@ const CreateRoom = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="genre" className="block text-sm font-medium text-zinc-300 mb-1">
+                  <label htmlFor="genre" className="block text-sm font-medium text-white mb-1">
                     音楽のジャンル
                   </label>
                   <input
@@ -210,7 +213,7 @@ const CreateRoom = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="maxParticipants" className="block text-sm font-medium text-zinc-300 mb-1">
+                  <label htmlFor="maxParticipants" className="block text-sm font-medium text-white mb-1">
                     最大参加人数
                   </label>
                   <input
@@ -229,7 +232,7 @@ const CreateRoom = () => {
 
             {/* プレイリスト選択セクション */}
             <div className="pt-4 border-t border-zinc-700">
-              <h2 className="text-xl font-bold mb-4 flex items-center">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-white">
                 <Music className="text-green-500 mr-2" size={20} />
                 プレイリストを選択
               </h2>
@@ -244,15 +247,13 @@ const CreateRoom = () => {
                       className="w-16 h-16 object-cover rounded-md mr-4"
                     />
                     <div className="flex-1">
-                      <h3 className="font-bold">{selectedPlaylist.name}</h3>
-                      <p className="text-sm text-zinc-400">
-                        {selectedPlaylist.tracks}曲 • {selectedPlaylist.owner}
-                      </p>
+                      <h3 className="font-bold text-white">{selectedPlaylist.name}</h3>
+                      <p className="text-sm text-zinc-200">{selectedPlaylist.description}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setSelectedPlaylist(null)}
-                      className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-600"
+                      className="p-2 text-zinc-200 hover:text-white rounded-full hover:bg-zinc-600"
                     >
                       <X size={18} />
                     </button>
@@ -264,13 +265,13 @@ const CreateRoom = () => {
                     className="flex items-center justify-between bg-zinc-700 border border-zinc-600 rounded-md py-2 px-3 cursor-pointer"
                     onClick={() => setIsPlaylistDropdownOpen(!isPlaylistDropdownOpen)}
                   >
-                    <div className="flex items-center text-zinc-400">
+                    <div className="flex items-center text-zinc-200">
                       <Music size={18} className="mr-2" />
                       <span>プレイリストを選択してください</span>
                     </div>
                     <ChevronDown
                       size={18}
-                      className={`transition-transform ${isPlaylistDropdownOpen ? "rotate-180" : ""}`}
+                      className={`transition-transform text-zinc-200 ${isPlaylistDropdownOpen ? "rotate-180" : ""}`}
                     />
                   </div>
 
@@ -294,7 +295,7 @@ const CreateRoom = () => {
                       </div>
 
                       {filteredPlaylists.length === 0 ? (
-                        <div className="p-4 text-center text-zinc-400">プレイリストが見つかりません</div>
+                        <div className="p-4 text-center text-zinc-200">プレイリストが見つかりません</div>
                       ) : (
                         <div>
                           {filteredPlaylists.map((playlist) => (
@@ -314,10 +315,8 @@ const CreateRoom = () => {
                                   className="w-12 h-12 object-cover rounded-md mr-3"
                                 />
                                 <div>
-                                  <h3 className="font-medium">{playlist.name}</h3>
-                                  <p className="text-xs text-zinc-400">
-                                    {playlist.tracks}曲 • {playlist.owner}
-                                  </p>
+                                  <h3 className="font-medium text-white">{playlist.name}</h3>
+                                  <p className="text-xs text-zinc-200">{playlist.description}</p>
                                 </div>
                               </div>
                             </div>
@@ -330,7 +329,7 @@ const CreateRoom = () => {
               )}
 
               {!selectedPlaylist && (
-                <p className="text-sm text-zinc-400 mb-4">
+                <p className="text-sm text-zinc-200 mb-4">
                   ルームで共有したいSpotifyのプレイリストを選択してください。
                   参加者はあなたが選んだプレイリストの曲を一緒に聴くことができます。
                 </p>
@@ -375,4 +374,3 @@ const CreateRoom = () => {
 }
 
 export default CreateRoom
-

@@ -58,10 +58,11 @@ const MyRoomProvider = ({ children }) => {
   };
 
   // ルームに参加
-  const joinRoomData = async (roomId, userId) => {
+  const joinRoomData = async (roomId, userId, userName) => {
     try {
-      await joinRoom(userId, roomId);
+      await joinRoom(roomId, userId, userName);
       setRoom((prev) => ({ ...prev, isJoined: true }));
+      return true
     } catch (error) {
       console.error("Error joining room:", error);
     }

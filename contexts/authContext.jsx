@@ -5,12 +5,21 @@ import { useRouter } from "next/navigation";
 // 修正: login ではなく loginApi、他も同様に名前を合わせる
 import { signUpApi, loginApi, logoutApi } from "../lib/authLib";
 
+// const initialAuthState = {
+//   isLogin: false,
+//   userId: null,
+//   userName: null,
+//   userIcon: null,
+//   is_verified: false,
+//   services: [],
+// };
+
 const initialAuthState = {
-  isLogin: false,
-  userId: null,
-  userName: null,
+  isLogin: true,
+  userId: 2,
+  userName: "test2",
   userIcon: null,
-  is_verified: false,
+  isVerified: false,
   services: [],
 };
 
@@ -35,7 +44,7 @@ const AuthProvider = ({ children }) => {
           userId: response.user_id,
           userName: response.user_name,
           userIcon: response.profile_image_url,
-          is_verified: false,
+          isVerified: false,
           services: [],
         });
         router.push("/dash-board");
@@ -58,7 +67,7 @@ const AuthProvider = ({ children }) => {
           userId: response.user_id,
           userName: response.user_name,
           userIcon: response.profile_image_url,
-          is_verified: response.is_verified,
+          isVerified: response.is_verified,
           services: [],
         });
         router.push("/dash-board");

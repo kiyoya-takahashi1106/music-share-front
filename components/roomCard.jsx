@@ -3,13 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthState } from "@/contexts/authContext"
-import { useRoomsState } from "@/contexts/roomsContext"
+import { useMyRoomState } from "@/contexts/myRoomContext"
 import { Music, Play, User, Users, Calendar, Headphones } from "lucide-react"
 
 const RoomCard = ({ room }) => {
   const router = useRouter()
   const { authState } = useAuthState()
-  const { joinRoomById } = useRoomsState()
+  const { joinRoomData } = useMyRoomState()
   const [isHovered, setIsHovered] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
 
@@ -38,8 +38,9 @@ const RoomCard = ({ room }) => {
 
     setIsJoining(true)
     try {
-      const success = await joinRoomById(room.room_id, authState.userId)
+      const success = await joinRoomData(room.room_id, authState.userId, authState.userName)
       if (success) {
+        console.log("Joined room successfully")
         router.push(`/room/${room.room_id}`)
       }
     } catch (error) {
