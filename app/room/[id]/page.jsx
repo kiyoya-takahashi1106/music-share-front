@@ -24,7 +24,7 @@ const RoomPage = () => {
   const params = useParams()
   const router = useRouter()
   const { roomId } = params
-  const { room, roomData, leaveRoom } = useMyRoomState()
+  const { roomData, leaveRoom } = useMyRoomState()
 
   // ローカルステート
   const [isPlaying, setIsPlaying] = useState(true)

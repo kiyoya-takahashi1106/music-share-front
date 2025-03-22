@@ -83,17 +83,16 @@ const CreateRoom = () => {
             playlist.description.toLowerCase().includes(searchTerm.toLowerCase()),
         )
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!selectedPlaylist) {
       alert("プレイリストを選択してください")
       return
     }
-
+  
     setIsLoading(true)
-
-    // 送信処理
-    setTimeout(() => {
+  
+    try {
       const newRoom = {
         roomName: roomName,
         isPublic: isPublic,
@@ -107,10 +106,13 @@ const CreateRoom = () => {
         playingSongId: selectedPlaylist.firstSong.id,
         playingSongName: selectedPlaylist.firstSong.name,
       }
-      createRoomData(newRoom)
+      const createdRoom = await createRoomData(newRoom)
+      router.push(`/room/${createdRoom.roomId}`)
+    } catch (error) {
+      console.error("Room creation failed:", error)
+    } finally {
       setIsLoading(false)
-      router.push(`/room/${room.roomId}`)
-    }, 1000)
+    }
   }
 
   return (

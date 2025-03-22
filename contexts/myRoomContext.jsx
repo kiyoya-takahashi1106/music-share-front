@@ -52,6 +52,7 @@ const MyRoomProvider = ({ children }) => {
     try {
       const createdRoom = await createRoom(roomData);
       setRoom({ isJoined: true, ...createdRoom });
+      return createdRoom
     } catch (error) {
       console.error("Error creating room:", error);
     }
