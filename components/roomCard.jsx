@@ -26,7 +26,7 @@ const RoomCard = ({ room }) => {
   }
 
   // ルームに参加
-  const handleJoinRoom = async (e) => {
+  const handleJoinRoom = (e) => {
     e.stopPropagation()
 
     if (!authState.isLogin) {
@@ -38,9 +38,8 @@ const RoomCard = ({ room }) => {
 
     setIsJoining(true)
     try {
-      const success = await joinRoomData(room.room_id, authState.userId, authState.userName)
+      const success = joinRoomData(room.room_id, authState.userId, authState.userName)
       if (success) {
-        console.log("Joined room successfully")
         router.push(`/room/${room.room_id}`)
       }
     } catch (error) {

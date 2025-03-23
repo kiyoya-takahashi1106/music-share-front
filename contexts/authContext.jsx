@@ -5,23 +5,23 @@ import { useRouter } from "next/navigation";
 // 修正: login ではなく loginApi、他も同様に名前を合わせる
 import { signUpApi, loginApi, logoutApi } from "../lib/authLib";
 
-// const initialAuthState = {
-//   isLogin: false,
-//   userId: null,
-//   userName: null,
-//   userIcon: null,
-//   is_verified: false,
-//   services: [],
-// };
-
 const initialAuthState = {
-  isLogin: true,
-  userId: 2,
-  userName: "test2",
+  isLogin: false,
+  userId: null,
+  userName: null,
   userIcon: null,
-  isVerified: false,
+  is_verified: false,
   services: [],
 };
+
+// const initialAuthState = {
+//   isLogin: true,
+//   userId: 2,
+//   userName: "test2",
+//   userIcon: null,
+//   isVerified: false,
+//   services: [],
+// };
 
 const AuthContext = createContext(null);
 

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useAuthState } from "@/contexts/authContext"
 import { useMyRoomState } from "@/contexts/myRoomContext"
-// import { useAuthState } from "@/contexts/authContext"
 import Header from "@/components/header"
 import {
   Music,
@@ -24,7 +24,8 @@ const RoomPage = () => {
   const params = useParams()
   const router = useRouter()
   const { roomId } = params
-  const { roomData, leaveRoom } = useMyRoomState()
+  const { authState } = useAuthState()
+  const { room, leaveRoomData, deleteRoomData } = useMyRoomState()
 
   // ローカルステート
   const [isPlaying, setIsPlaying] = useState(true)
@@ -70,44 +71,51 @@ const RoomPage = () => {
 
     // 実際のアプリではここでAPIを呼び出してルームから退出する処理を行う
     setTimeout(() => {
-      if (leaveRoom) {
-        leaveRoom(roomId)
+      const result = leaveRoomData(authState.userId, room.roomId)
+      if(result){
+        router.push("/dash-board") // ダッシュボードページへリダイレクト
       }
-      router.push("/dash-board") // ダッシュボードページへリダイレクト
+    }, 1000)
+  }
+
+  // ルームを削除する
+  const handleDeleteRoom = () => {
+    setIsLeavingRoom(true)
+
+    // 実際のアプリではここでAPIを呼び出してルームを削除する処理を行う
+    setTimeout(() => {
+      const result = deleteRoomData(room.roomId)
+      if(result){
+        router.push("/dash-board") // ダッシュボードページへリダイレクト
+      }
     }, 1000)
   }
 
   // 参加者のアバター色をランダムに生成
   const getAvatarColor = (name) => {
     const colors = ["bg-green-500", "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-yellow-500", "bg-red-500"]
+    if (!name || name.length === 0) return colors[0]
     const index = name.charCodeAt(0) % colors.length
     return colors[index]
   }
 
   // 参加者リストの生成（roomData がある場合、本データの形式に合わせて生成）
-  const participants = roomData
-    ? [
-        {
-          id: roomData.host.hostId,
-          name: roomData.host.hostName,
-          isHost: true,
-        },
-        ...((roomData.participants || []).map((p) => ({
-          id: p.userId,
-          name: p.username,
-          isHost: false,
-        }))),
-      ]
-    : [
-        { id: 1, name: "田中太郎", isHost: true },
-        { id: 2, name: "佐藤花子", isHost: false },
-        { id: 3, name: "鈴木一郎", isHost: false },
-        { id: 4, name: "山田優", isHost: false },
-      ];
+  // const participants = [
+  //   {
+  //     id: room.host.hostId,
+  //     name: room.host.hostName,
+  //     isHost: true,
+  //   },
+  //   ...((room.participants || []).map((p) => ({
+  //     id: p.userId,
+  //     name: p.username,
+  //     isHost: false,
+  //   }))),
+  // ]
 
   // 現在再生中の曲情報（デモ用）
   const currentSong = {
-    title: roomData?.playingSongName || "Shape of You",
+    title: room?.playingSongName || "Shape of You",
     artist: "Ed Sheeran",
     album: "÷ (Divide)",
     coverUrl: "https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96",
@@ -115,7 +123,7 @@ const RoomPage = () => {
 
   // プレイリスト情報（デモ用）
   const playlist = {
-    name: roomData?.playingPlaylistName || "トップヒット曲",
+    name: room?.playingPlaylistName || "トップヒット曲",
     songs: [
       { id: 1, title: "Shape of You", artist: "Ed Sheeran", duration: "3:53", isPlaying: true },
       { id: 2, title: "Blinding Lights", artist: "The Weeknd", duration: "3:20" },
@@ -136,20 +144,17 @@ const RoomPage = () => {
             {/* ルーム情報 */}
             <div className="mb-6 bg-zinc-800 rounded-xl p-4">
               <div className="flex justify-between items-center mb-2">
-                <h1 className="text-2xl font-bold">{roomData?.roomName || "音楽共有ルーム"}</h1>
+                <h1 className="text-2xl font-bold">{room?.roomName || "音楽共有ルーム"}</h1>
                 <div className="flex items-center gap-2">
                   <span className="text-sm bg-green-500/20 text-green-500 px-2 py-1 rounded-full">
-                    {roomData?.genre || "ポップ"}
+                    {room?.genre || "ポップ"}
                   </span>
                   <span className="text-sm bg-zinc-700 px-2 py-1 rounded-full flex items-center">
                     <Users size={14} className="mr-1" />
-                    {roomData?.nowParticipants || participants.length}/{roomData?.maxParticipants || 10}
+                    {room.nowParticipants}/{room?.maxParticipants || 10}
                   </span>
                 </div>
               </div>
-              <p className="text-zinc-400 text-sm">
-                ホスト: {roomData?.host?.name || participants.find((p) => p.isHost)?.name || "不明"}
-              </p>
             </div>
 
             {/* 現在再生中 */}
@@ -272,56 +277,72 @@ const RoomPage = () => {
               <div className="p-4 border-b border-zinc-700 flex justify-between items-center">
                 <h2 className="font-bold flex items-center">
                   <Users className="mr-2 text-green-500" size={18} />
-                  参加者 ({participants.length})
+                  参加者 ({room.nowParticipants || 0})
                 </h2>
               </div>
-
               <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 400px)" }}>
                 <ul>
-                  {participants.map((participant) => (
-                    <li key={participant.id} className="flex items-center justify-between p-3 hover:bg-zinc-700">
+                  {room?.host && (
+                    <li key={`host-${room.host.hostId}`} className="flex items-center justify-between p-3 hover:bg-zinc-700">
                       <div className="flex items-center">
                         <div
-                          className={`w-10 h-10 rounded-full ${getAvatarColor(participant.name)} flex items-center justify-center mr-3`}
+                          className={`w-10 h-10 rounded-full ${getAvatarColor(room.host.hostName)} flex items-center justify-center mr-3`}
                         >
-                          {participant.name.charAt(0)}
+                          {room.host.hostName.charAt(0)}
                         </div>
-                        <div>
-                          <div className="flex items-center">
-                            <span className="font-medium">{participant.name}</span>
-                            {participant.isHost && (
-                              <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded-full">
-                                ホスト
-                              </span>
-                            )}
-                          </div>
+                        <div className="flex items-center">
+                          <span className="font-medium">{room.host.hostName}</span>
+                          <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded-full">
+                            ホスト
+                          </span>
                         </div>
                       </div>
                     </li>
-                  ))}
+                  )}
+                  {/* 個別の参加者リストを表示する代わりに参加者数のみ表示する場合は、ここを削除できます */}
                 </ul>
               </div>
             </div>
 
-            {/* ルーム退出ボタン */}
+            {/* ルーム退出／削除ボタン */}
             <div className="mt-4 bg-zinc-800 rounded-xl p-4">
-              <button
-                onClick={handleLeaveRoom}
-                disabled={isLeavingRoom}
-                className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLeavingRoom ? (
-                  <>
-                    <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                    退出中...
-                  </>
-                ) : (
-                  <>
-                    <LogOut size={18} />
-                    ルームから退出する
-                  </>
-                )}
-              </button>
+              {room?.host?.hostId === authState.userId ? (
+                <button
+                  onClick={handleDeleteRoom}
+                  disabled={isLeavingRoom}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isLeavingRoom ? (
+                    <>
+                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      削除中...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={18} />
+                      ルームを削除する
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handleLeaveRoom}
+                  disabled={isLeavingRoom}
+                  className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isLeavingRoom ? (
+                    <>
+                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      退出中...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={18} />
+                      ルームから退出する
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -331,20 +352,3 @@ const RoomPage = () => {
 }
 
 export default RoomPage
-
-// myRoomLib.js
-export const joinRoom = async (roomId, userId, userName) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/room/join`, {
-      roomId: roomId,
-      roomPassword: null,
-      userId: userId,
-      userName: userName,
-    });
-    console.log('joinRoom response:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error joining room:', error);
-    throw error;
-  }
-};

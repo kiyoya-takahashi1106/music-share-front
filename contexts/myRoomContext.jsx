@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import {
-  fetchRoomDetails,
+  getRoomDetail,
   createRoom,
   joinRoom,
   leaveRoom,
@@ -39,7 +39,7 @@ const MyRoomProvider = ({ children }) => {
   // ルーム詳細を取得
   const getRoomDetails = async (roomId) => {
     try {
-      const roomData = await fetchRoomDetails(roomId);
+      const roomData = await getRoomDetail(roomId);
       console.log(roomData)
       setRoom({ isJoined: true, ...roomData });
     } catch (error) {
@@ -61,21 +61,24 @@ const MyRoomProvider = ({ children }) => {
   // ルームに参加
   const joinRoomData = async (roomId, userId, userName) => {
     try {
-      await joinRoom(roomId, userId, userName);
-      setRoom((prev) => ({ ...prev, isJoined: true }));
+      const updatedRoom = await joinRoom(roomId, userId, userName);
+      setRoom({ ...updatedRoom, isJoined: true });
       return true
     } catch (error) {
       console.error("Error joining room:", error);
     }
   };
+  
 
   // ルームから退出
   const leaveRoomData = async (roomId, userId) => {
     try {
       await leaveRoom(userId, roomId);
       setRoom({ isJoined: false, roomId: null });
+      return true
     } catch (error) {
       console.error("Error leaving room:", error);
+      return false
     }
   };
 
@@ -84,8 +87,10 @@ const MyRoomProvider = ({ children }) => {
     try {
       await deleteRoom(roomId);
       setRoom({ isJoined: false, roomId: null });
+      return true
     } catch (error) {
       console.error("Error deleting room:", error);
+      return false
     }
   };
 
