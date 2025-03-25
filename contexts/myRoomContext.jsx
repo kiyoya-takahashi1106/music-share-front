@@ -23,7 +23,7 @@ const MyRoomProvider = ({ children }) => {
     genre: null,
     maxParticipants: null,
     nowParticipants: null,
-    host: {},
+    host: {hostId: null, hostName: ""},
     playingPlaylistName: null,
     playingSongName: null,
     createdAt: null,

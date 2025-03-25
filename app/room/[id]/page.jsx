@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuthState } from "@/contexts/authContext"
 import { useMyRoomState } from "@/contexts/myRoomContext"
@@ -8,32 +8,38 @@ import Header from "@/components/header"
 import {
   Music,
   Users,
-  SkipForward,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Share2,
-  Settings,
   LogOut,
   Clock,
-  Heart,
 } from "lucide-react"
 
 const RoomPage = () => {
   const params = useParams()
   const router = useRouter()
-  const { roomId } = params
+  const { id: roomId } = useParams();
   const { authState } = useAuthState()
-  const { room, leaveRoomData, deleteRoomData } = useMyRoomState()
+  const { room, getRoomDetails, leaveRoomData, deleteRoomData } = useMyRoomState()
 
   // ローカルステート
   const [isPlaying, setIsPlaying] = useState(true)
-  const [songProgress, setSongProgress] = useState(35) // 0-100の範囲
+  const [songProgress, setSongProgress] = useState(35)
   const [isLeavingRoom, setIsLeavingRoom] = useState(false)
-
-  // 再生時間の計算用
+  
   const progressInterval = useRef(null)
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    console.log("レンダリングしました")
+    // 初回レンダリングなら処理をスキップする
+    if (isFirstRender.current) {
+      console.log("初回レンダリング");
+      isFirstRender.current = false;
+      return;
+    }
+    console.log("らんらんるんるん");
+    console.log(roomId)
+    getRoomDetails(roomId);
+    console.log("room", room)
+  }, []);
   
   // 曲の再生時間（デモ用）
   const songDuration = 217 // 秒
@@ -169,7 +175,7 @@ const RoomPage = () => {
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex justify-between items-start">
+                  {/* <div className="flex justify-between items-start">
                     <div>
                       <h2 className="text-3xl font-bold mb-1">{currentSong.title}</h2>
                       <p className="text-xl text-zinc-300 mb-2">{currentSong.artist}</p>
@@ -178,7 +184,7 @@ const RoomPage = () => {
                     <button className="p-2 text-zinc-400 hover:text-white">
                       <Heart size={24} />
                     </button>
-                  </div>
+                  </div> */}
 
                   {/* 再生コントロール */}
                   <div className="mt-6">
@@ -227,12 +233,12 @@ const RoomPage = () => {
                   {playlist.name}
                 </h2>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700">
+                  {/* <button className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700">
                     <Share2 size={18} />
                   </button>
                   <button className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-700">
                     <Settings size={18} />
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -282,7 +288,7 @@ const RoomPage = () => {
               </div>
               <div className="overflow-y-auto" style={{ maxHeight: "calc(100vh - 400px)" }}>
                 <ul>
-                  {room?.host && (
+                  {room.host && (
                     <li key={`host-${room.host.hostId}`} className="flex items-center justify-between p-3 hover:bg-zinc-700">
                       <div className="flex items-center">
                         <div

@@ -14,15 +14,6 @@ const initialAuthState = {
   services: [],
 };
 
-// const initialAuthState = {
-//   isLogin: true,
-//   userId: 2,
-//   userName: "test2",
-//   userIcon: null,
-//   isVerified: false,
-//   services: [],
-// };
-
 const AuthContext = createContext(null);
 
 const AuthProvider = ({ children }) => {
