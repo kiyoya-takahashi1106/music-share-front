@@ -38,8 +38,8 @@ const RoomCard = ({ room }) => {
 
     setIsJoining(true)
     try {
-      const success = joinRoomData(room.room_id, authState.userId, authState.userName)
-      if (success) {
+      const responceStatus = joinRoomData(room.room_id, authState.userId, authState.userName)
+      if (responceStatus) {
         router.push(`/room/${room.room_id}`)
       }
     } catch (error) {

@@ -40,7 +40,6 @@ const MyRoomProvider = ({ children }) => {
   const getRoomDetails = async (roomId) => {
     try {
       const roomData = await getRoomDetail(roomId);
-      console.log(roomData)
       setRoom({ isJoined: true, ...roomData });
     } catch (error) {
       console.error("Error fetching room details:", error);
@@ -50,9 +49,8 @@ const MyRoomProvider = ({ children }) => {
   // ルームを作成
   const createRoomData = async (roomData) => {
     try {
-      const createdRoom = await createRoom(roomData);
-      setRoom({ isJoined: true, ...createdRoom });
-      return createdRoom
+      const responce = await createRoom(roomData);
+      return responce.roomId
     } catch (error) {
       console.error("Error creating room:", error);
     }
@@ -61,9 +59,8 @@ const MyRoomProvider = ({ children }) => {
   // ルームに参加
   const joinRoomData = async (roomId, userId, userName) => {
     try {
-      const updatedRoom = await joinRoom(roomId, userId, userName);
-      setRoom({ ...updatedRoom, isJoined: true });
-      return true
+      const responce = await joinRoom(roomId, userId, userName);
+      return responce.status
     } catch (error) {
       console.error("Error joining room:", error);
     }

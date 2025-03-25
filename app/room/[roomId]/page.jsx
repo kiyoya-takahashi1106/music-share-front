@@ -15,7 +15,6 @@ import {
 const RoomPage = () => {
   const params = useParams()
   const router = useRouter()
-  const { id: roomId } = useParams();
   const { authState } = useAuthState()
   const { room, getRoomDetails, leaveRoomData, deleteRoomData } = useMyRoomState()
 
@@ -25,20 +24,9 @@ const RoomPage = () => {
   const [isLeavingRoom, setIsLeavingRoom] = useState(false)
   
   const progressInterval = useRef(null)
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    console.log("レンダリングしました")
-    // 初回レンダリングなら処理をスキップする
-    if (isFirstRender.current) {
-      console.log("初回レンダリング");
-      isFirstRender.current = false;
-      return;
-    }
-    console.log("らんらんるんるん");
-    console.log(roomId)
-    getRoomDetails(roomId);
-    console.log("room", room)
+    getRoomDetails(params.roomId);
   }, []);
   
   // 曲の再生時間（デモ用）

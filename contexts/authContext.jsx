@@ -3,12 +3,13 @@
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 // 修正: login ではなく loginApi、他も同様に名前を合わせる
-import { signUpApi, loginApi, logoutApi } from "../lib/authLib";
+import { signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
 
 const initialAuthState = {
   isLogin: false,
   userId: null,
   userName: null,
+  email: null,
   userIcon: null,
   is_verified: false,
   services: [],
@@ -35,6 +36,7 @@ const AuthProvider = ({ children }) => {
           userId: response.user_id,
           userName: response.user_name,
           userIcon: response.profile_image_url,
+          email: response.email,
           isVerified: false,
           services: [],
         });
@@ -58,6 +60,7 @@ const AuthProvider = ({ children }) => {
           userId: response.user_id,
           userName: response.user_name,
           userIcon: response.profile_image_url,
+          email: response.email,
           isVerified: response.is_verified,
           services: [],
         });
@@ -71,6 +74,26 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  // プロフィール更新
+  const updateProfile = async(profileData) => {
+    try{
+      updateApi({
+        userId: authState.userId,
+        userName: profileData.name,
+        email: profileData.email,
+      });
+      setAuthState((prevState) => ({
+        ...prevState,
+        userName: profileData.name,
+        email: profileData.email,
+      }));
+      return true
+    } catch (error) {
+      console.log("プロフィール更新に失敗しました", error);
+      return false
+    }
+  }
+
   // ログアウト
   const logoutFunction = async () => {
     try {
@@ -83,6 +106,7 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  // サービス追加
   const addService = (serviceName, accessToken, refreshToken) => {
     setAuthState((prevState) => ({
       ...prevState,
@@ -98,7 +122,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ authState, SignUpFunction, loginFunction, logoutFunction, addService }}>
+    <AuthContext.Provider value={{ authState, SignUpFunction, loginFunction, updateProfile, logoutFunction, addService }}>
       {children}
     </AuthContext.Provider>
   );

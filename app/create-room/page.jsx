@@ -16,7 +16,7 @@ const CreateRoom = () => {
   const [maxParticipants, setMaxParticipants] = useState(2)
   const router = useRouter();
   const { authState } = useAuthState()
-  const { room, createRoomData } = useMyRoomState()
+  const { createRoomData } = useMyRoomState()
 
   // プレイリスト関連の状態
   const [playlists, setPlaylists] = useState([])
@@ -106,8 +106,8 @@ const CreateRoom = () => {
         playingSongId: selectedPlaylist.firstSong.id,
         playingSongName: selectedPlaylist.firstSong.name,
       }
-      const createdRoom = await createRoomData(newRoom)
-      router.push(`/room/${createdRoom.roomId}`)
+      const reponceRoomId = await createRoomData(newRoom)
+      router.push(`/room/${reponceRoomId}`)
     } catch (error) {
       console.error("Room creation failed:", error)
     } finally {
