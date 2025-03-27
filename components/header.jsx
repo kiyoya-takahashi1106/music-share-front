@@ -9,10 +9,18 @@ import UserMenuModal from "./modal/user-menu.jsx"
 const Header = () => {
   const [isMobile, setIsMobile] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { authState } = useAuthState()
+  const [isLoading, setIsLoading] = useState(false);
+  const { authState, getUserInfo } = useAuthState()
   const isLogin = authState.isLogin
 
   useEffect(() => {
+    // リロードされてもログイン情報を保持
+    const fetchUserInfo = async () => {
+      await getUserInfo();
+      setIsLoading(false);
+    };
+    fetchUserInfo();
+
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768)
     }
@@ -23,6 +31,12 @@ const Header = () => {
       window.removeEventListener("resize", handleResize)
     }
   }, [])
+
+
+  if (isLoading) {
+    return <div>Loading...</div>; // ローディング中の表示
+  }
+  
 
   // css
   const headerStyle = {

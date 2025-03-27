@@ -3,13 +3,13 @@
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 // 修正: login ではなく loginApi、他も同様に名前を合わせる
-import { signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
+import { getUserInfoApi, signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
 
 const initialAuthState = {
   isLogin: false,
   userId: null,
   userName: null,
-  email: null,
+  email: "null",
   userIcon: null,
   is_verified: false,
   services: [],
@@ -20,6 +20,28 @@ const AuthContext = createContext(null);
 const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState(initialAuthState);
   const router = useRouter();
+
+  // cookieからユーザー情報を取得
+  const getUserInfo = async () => {
+    try {
+      const response = await getUserInfoApi();
+      if (response) {
+        setAuthState({
+          isLogin: true,
+          userId: response.user_id,
+          userName: response.user_name,
+          userIcon: response.profile_image_url,
+          email: response.email,
+          isVerified: false,
+          services: [],
+        });
+      }
+    } catch (error) {
+      router.push("/auth/sign-in");
+      console.log("ユーザー情報の取得に失敗しました", error);
+    }
+  }
+
 
   // サインアップ
   const SignUpFunction = async (signUpInfo) => {
@@ -50,6 +72,7 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+
   // ログイン
   const loginFunction = async (loginInfo) => {
     try {
@@ -74,6 +97,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+
+  // ログアウト
+  const logoutFunction = async () => {
+    try {
+      await logoutApi();
+      setAuthState(initialAuthState);
+      router.push("/auth/sign-in");
+      console.log("ログアウトしました");
+    } catch (error) {
+      console.log("ログアウトに失敗しました", error);
+    }
+  };
+
+
   // プロフィール更新
   const updateProfile = async(profileData) => {
     try{
@@ -94,17 +131,6 @@ const AuthProvider = ({ children }) => {
     }
   }
 
-  // ログアウト
-  const logoutFunction = async () => {
-    try {
-      await logoutApi();
-      setAuthState(initialAuthState);
-      router.push("/lp");
-      console.log("ログアウトしました");
-    } catch (error) {
-      console.log("ログアウトに失敗しました", error);
-    }
-  };
 
   // サービス追加
   const addService = (serviceName, accessToken, refreshToken) => {
@@ -122,7 +148,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ authState, SignUpFunction, loginFunction, updateProfile, logoutFunction, addService }}>
+    <AuthContext.Provider value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, addService }}>
       {children}
     </AuthContext.Provider>
   );

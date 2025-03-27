@@ -293,7 +293,18 @@ const RoomPage = () => {
                       </div>
                     </li>
                   )}
-                  {/* 個別の参加者リストを表示する代わりに参加者数のみ表示する場合は、ここを削除できます */}
+                  {room.participants?.map((participant, index) => (
+                    <li key={`participant-${index}`} className="flex items-center justify-between p-3 hover:bg-zinc-700">
+                      <div className="flex items-center">
+                        <div
+                          className={`w-10 h-10 rounded-full ${getAvatarColor(participant.username)} flex items-center justify-center mr-3`}
+                        >
+                          {participant.username.charAt(0)}
+                        </div>
+                        <span className="font-medium">{participant.username}</span>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

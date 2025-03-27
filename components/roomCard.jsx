@@ -43,6 +43,7 @@ const RoomCard = ({ room }) => {
         router.push(`/room/${room.room_id}`)
       }
     } catch (error) {
+      router.push(`/auth/sign-in`)
       console.error("Failed to join room:", error)
     } finally {
       setIsJoining(false)

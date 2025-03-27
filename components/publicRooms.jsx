@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useRoomsState } from "@/contexts/roomsContext"
 import RoomCard from "./roomCard"
 import { Music, Search, RefreshCw } from "lucide-react"
 
 const PublicRooms = () => {
+  const router = useRouter()
   const { rooms, getPublicRooms } = useRoomsState()
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredRooms, setFilteredRooms] = useState([])
@@ -13,7 +15,12 @@ const PublicRooms = () => {
 
   // マウント時にルームデータを取得
   useEffect(() => {
-    getPublicRooms()
+    try {
+      getPublicRooms()
+    } catch (error) {
+      router.push("/auth/sign-in")
+      console.error("Failed to fetch public rooms:", error)
+    }
   }, [])
 
   // 検索キーワードおよびroomsの変更に合わせたフィルタリング

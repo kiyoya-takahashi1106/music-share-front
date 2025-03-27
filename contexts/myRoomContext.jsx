@@ -59,8 +59,7 @@ const MyRoomProvider = ({ children }) => {
   // ルームに参加
   const joinRoomData = async (roomId, userId, userName) => {
     try {
-      const responce = await joinRoom(roomId, userId, userName);
-      return responce.status
+      joinRoom(roomId, userId, userName);
     } catch (error) {
       console.error("Error joining room:", error);
     }
