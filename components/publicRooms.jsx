@@ -23,23 +23,23 @@ const PublicRooms = () => {
     }
   }, [])
 
-  // 検索キーワードおよびroomsの変更に合わせたフィルタリング
+  // 検索キーワード/rooms 更新時にフィルタリング
   useEffect(() => {
     if (searchTerm.trim() === "") {
-      setFilteredRooms(rooms)
+      setFilteredRooms(rooms || []) // roomsがnullの場合は[]を設定
     } else {
-      const filtered = rooms.filter(
+      const filtered = (rooms || []).filter(
         (room) =>
-          room.room_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          room.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           room.genre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          room.playing_playlist_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          room.playing_song_name.toLowerCase().includes(searchTerm.toLowerCase()),
+          room.playingPlaylistName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          room.playingSongName.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredRooms(filtered)
     }
   }, [rooms, searchTerm])
 
-  // 手動による更新
+  // 手動更新
   const handleRefresh = async () => {
     setIsRefreshing(true)
     await getPublicRooms()
@@ -48,7 +48,6 @@ const PublicRooms = () => {
 
   return (
     <div>
-      {/* コンテンツエリア */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div className="mb-4 md:mb-0">
@@ -58,8 +57,6 @@ const PublicRooms = () => {
             </h1>
             <p className="text-zinc-400 mt-1">みんなで音楽を共有しよう</p>
           </div>
-
-          {/* 検索と更新 */}
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
@@ -81,7 +78,6 @@ const PublicRooms = () => {
           </div>
         </div>
 
-        {/* 1行に1つのカードを表示するレイアウト */}
         {filteredRooms.length === 0 ? (
           <div className="text-center py-12">
             <div className="bg-zinc-800/50 inline-flex rounded-full p-4 mb-4">
@@ -97,7 +93,8 @@ const PublicRooms = () => {
         ) : (
           <div className="space-y-6">
             {filteredRooms.map((room) => (
-              <RoomCard key={room.room_id} room={room} />
+              // キーをキャメルケースの roomId に変更
+              <RoomCard key={room.roomId} room={room} />
             ))}
           </div>
         )}

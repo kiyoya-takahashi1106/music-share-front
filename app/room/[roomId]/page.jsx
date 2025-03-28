@@ -5,12 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useAuthState } from "@/contexts/authContext"
 import { useMyRoomState } from "@/contexts/myRoomContext"
 import Header from "@/components/header"
-import {
-  Music,
-  Users,
-  LogOut,
-  Clock,
-} from "lucide-react"
+import { Music, Users, LogOut, Clock } from "lucide-react"
 
 const RoomPage = () => {
   const params = useParams()

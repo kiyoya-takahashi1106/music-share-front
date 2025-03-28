@@ -3,23 +3,23 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useAuthState } from "@/contexts/authContext"
-import { User } from "lucide-react"
-import UserMenuModal from "./modal/user-menu.jsx"
+import { User, Music, X } from "lucide-react"
+import UserMenuModal from "./modal/user-menu"
 
 const Header = () => {
   const [isMobile, setIsMobile] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
   const { authState, getUserInfo } = useAuthState()
   const isLogin = authState.isLogin
 
   useEffect(() => {
     // リロードされてもログイン情報を保持
     const fetchUserInfo = async () => {
-      await getUserInfo();
-      setIsLoading(false);
-    };
-    fetchUserInfo();
+      await getUserInfo()
+      setIsLoading(false)
+    }
+    fetchUserInfo()
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768)
@@ -32,11 +32,9 @@ const Header = () => {
     }
   }, [])
 
-
   if (isLoading) {
-    return <div>Loading...</div>; // ローディング中の表示
+    return <div>Loading...</div> // ローディング中の表示
   }
-  
 
   // css
   const headerStyle = {
@@ -160,9 +158,88 @@ const Header = () => {
         </div>
       </header>
 
+      {/* Spotify連携バナー - ログイン済みかつSpotify連携がまだの場合に表示 */}
+      {isLogin && authState.isSpotify === false && <SpotifyBanner />}
+
       {/* ユーザーメニューモーダル */}
       <UserMenuModal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </>
+  )
+}
+
+// Spotify連携バナーコンポーネント
+const SpotifyBanner = () => {
+  const [isDismissed, setIsDismissed] = useState(false)
+
+  if (isDismissed) return null
+
+  // インラインスタイルを使用して、より適切なレイアウトを実現
+  const bannerStyle = {
+    backgroundColor: "#121212",
+    color: "#FFFFFF",
+    padding: "8px 16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  }
+
+  const leftSectionStyle = {
+    display: "flex",
+    alignItems: "center",
+  }
+
+  const rightSectionStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  }
+
+  const buttonStyle = {
+    backgroundColor: "#1DB954",
+    color: "#000000",
+    padding: "4px 12px",
+    borderRadius: "20px",
+    fontSize: "14px",
+    fontWeight: "medium",
+    border: "none",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+  }
+
+  const closeButtonStyle = {
+    background: "none",
+    border: "none",
+    padding: "4px",
+    cursor: "pointer",
+    color: "#A7A7A7",
+  }
+
+  return (
+    <div style={bannerStyle}>
+      <div style={leftSectionStyle}>
+        <Music color="#1DB954" size={18} style={{ marginRight: "8px" }} />
+        <span style={{ fontSize: "14px" }}>Spotifyと連携しましょう！</span>
+      </div>
+      <div style={rightSectionStyle}>
+        <Link href="/spotify-connect" style={{ textDecoration: "none" }}>
+          <button
+            style={buttonStyle}
+            onMouseOver={(e) => (e.target.style.backgroundColor = "#1ED760")}
+            onMouseOut={(e) => (e.target.style.backgroundColor = "#1DB954")}
+          >
+            連携する
+          </button>
+        </Link>
+        <button
+          style={closeButtonStyle}
+          onClick={() => setIsDismissed(true)}
+          onMouseOver={(e) => (e.target.style.color = "#FFFFFF")}
+          onMouseOut={(e) => (e.target.style.color = "#A7A7A7")}
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
   )
 }
 

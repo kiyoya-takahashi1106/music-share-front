@@ -13,7 +13,7 @@ const RoomCard = ({ room }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
 
-  // 日付をフォーマット
+  // 日付をフォーマット（createAt を使用）
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleString("ja-JP", {
@@ -38,9 +38,10 @@ const RoomCard = ({ room }) => {
 
     setIsJoining(true)
     try {
-      const responceStatus = joinRoomData(room.room_id, authState.userId, authState.userName)
-      if (responceStatus) {
-        router.push(`/room/${room.room_id}`)
+      // API呼び出し時はキャメルケースの roomId を利用
+      const responseStatus = joinRoomData(room.roomId, authState.userId, authState.userName)
+      if (responseStatus) {
+        router.push(`/room/${room.roomId}`)
       }
     } catch (error) {
       router.push(`/auth/sign-in`)
@@ -52,11 +53,11 @@ const RoomCard = ({ room }) => {
 
   // ルーム詳細ページに移動
   const handleCardClick = () => {
-    router.push(`/room/${room.room_id}`)
+    router.push(`/room/${room.roomId}`)
   }
 
   // 参加者の割合を計算（プログレスバー用）
-  const participantPercentage = (room.now_participants / room.max_participants) * 100
+  const participantPercentage = (room.nowParticipants / room.maxParticipants) * 100
 
   return (
     <div
@@ -77,15 +78,15 @@ const RoomCard = ({ room }) => {
                 <span className="bg-green-500 text-xs font-bold text-black px-2 py-1 rounded-full">{room.genre}</span>
                 <span className="text-zinc-400 text-sm flex items-center">
                   <Calendar size={14} className="mr-1" />
-                  {formatDate(room.create_at)}
+                  {formatDate(room.createAt)}
                 </span>
               </div>
-              <h2 className="text-2xl font-bold text-white">{room.room_name}</h2>
+              <h2 className="text-2xl font-bold text-white">{room.roomName}</h2>
             </div>
             <div className="flex items-center text-zinc-400 text-sm">
               <div className="flex items-center bg-zinc-800 rounded-full px-3 py-1">
                 <User size={16} className="mr-1 text-green-500" />
-                <span>作成者: {room.host_user_name}</span>
+                <span>作成者: {room.hostUserName}</span>
               </div>
             </div>
           </div>
@@ -101,8 +102,8 @@ const RoomCard = ({ room }) => {
                 <Music size={24} className="text-green-500" />
               </div>
               <div>
-                <div className="text-lg font-medium text-white mb-1">{room.playing_song_name}</div>
-                <div className="text-sm text-zinc-400">{room.playing_playlist_name}</div>
+                <div className="text-lg font-medium text-white mb-1">{room.playingSongName}</div>
+                <div className="text-sm text-zinc-400">{room.playingPlaylistName}</div>
               </div>
             </div>
           </div>
@@ -115,9 +116,8 @@ const RoomCard = ({ room }) => {
             </h3>
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center">
-                {/* 参加者アイコン（ダミー） */}
                 <div className="flex -space-x-2">
-                  {[...Array(Math.min(3, room.now_participants))].map((_, i) => (
+                  {[...Array(Math.min(3, room.nowParticipants))].map((_, i) => (
                     <div
                       key={i}
                       className="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-900 flex items-center justify-center text-xs text-white"
@@ -125,14 +125,14 @@ const RoomCard = ({ room }) => {
                       {String.fromCharCode(65 + i)}
                     </div>
                   ))}
-                  {room.now_participants > 3 && (
+                  {room.nowParticipants > 3 && (
                     <div className="w-8 h-8 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-xs text-white">
-                      +{room.now_participants - 3}
+                      +{room.nowParticipants - 3}
                     </div>
                   )}
                 </div>
                 <span className="ml-3 text-zinc-400">
-                  {room.now_participants} / {room.max_participants} 人が参加中
+                  {room.nowParticipants} / {room.maxParticipants} 人が参加中
                 </span>
               </div>
             </div>
@@ -142,12 +142,12 @@ const RoomCard = ({ room }) => {
           </div>
         </div>
 
-        {/* 参加ボタンエリア - 下部に配置 */}
+        {/* 参加ボタンエリア */}
         <div className="bg-gradient-to-r from-green-900/30 to-zinc-800/30 p-6 border-t border-zinc-800">
           <div className="flex flex-col sm:flex-row items-center justify-between">
             <div className="mb-4 sm:mb-0">
               <h3 className="text-xl font-bold text-white mb-1">このルームに参加する</h3>
-              <p className="text-zinc-400 text-sm">{room.genre}の音楽を一緒に楽しみましょう</p>
+              <p className="text-zinc-400 text-sm">{room.genre} の音楽を一緒に楽しみましょう</p>
             </div>
 
             <button

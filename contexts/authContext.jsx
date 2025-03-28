@@ -2,17 +2,23 @@
 
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
-// 修正: login ではなく loginApi、他も同様に名前を合わせる
 import { getUserInfoApi, signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
+import { connectSpotifyApi } from "../lib/musicServiceLib";
 
 const initialAuthState = {
   isLogin: false,
   userId: null,
   userName: null,
-  email: "null",
+  email: null,
   userIcon: null,
-  is_verified: false,
-  services: [],
+  isSpotify: false,
+  services: {
+    spotify: {
+      serviceUserId: null,
+      encryptedAccessToken: null,
+      expiresAt: null,
+    },
+  },
 };
 
 const AuthContext = createContext(null);
@@ -28,20 +34,19 @@ const AuthProvider = ({ children }) => {
       if (response) {
         setAuthState({
           isLogin: true,
-          userId: response.user_id,
-          userName: response.user_name,
-          userIcon: response.profile_image_url,
+          userId: response.userId,
+          userName: response.userName,
+          userIcon: response.profileImageUrl,
           email: response.email,
-          isVerified: false,
-          services: [],
+          isSpotify: response.isSpotify,
+          services: response.services || {},
         });
       }
     } catch (error) {
       router.push("/auth/sign-in");
       console.log("ユーザー情報の取得に失敗しました", error);
     }
-  }
-
+  };
 
   // サインアップ
   const SignUpFunction = async (signUpInfo) => {
@@ -55,12 +60,12 @@ const AuthProvider = ({ children }) => {
       if (response) {
         setAuthState({
           isLogin: true,
-          userId: response.user_id,
-          userName: response.user_name,
-          userIcon: response.profile_image_url,
+          userId: response.userId,
+          userName: response.userName,
+          userIcon: response.profileImageUrl,
           email: response.email,
-          isVerified: false,
-          services: [],
+          isSpotify: response.isSpotify,
+          services: response.services || {},
         });
         router.push("/dash-board");
         console.log("サインアップしました");
@@ -72,7 +77,6 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-
   // ログイン
   const loginFunction = async (loginInfo) => {
     try {
@@ -80,12 +84,12 @@ const AuthProvider = ({ children }) => {
       if (response) {
         setAuthState({
           isLogin: true,
-          userId: response.user_id,
-          userName: response.user_name,
-          userIcon: response.profile_image_url,
+          userId: response.userId,
+          userName: response.userName,
+          userIcon: response.profileImageUrl,
           email: response.email,
-          isVerified: response.is_verified,
-          services: [],
+          isSpotify: response.isSpotify,
+          services: response.services || {},
         });
         router.push("/dash-board");
         console.log("ログインしました");
@@ -96,7 +100,6 @@ const AuthProvider = ({ children }) => {
       return false;
     }
   };
-
 
   // ログアウト
   const logoutFunction = async () => {
@@ -110,45 +113,47 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-
   // プロフィール更新
-  const updateProfile = async(profileData) => {
-    try{
+  const updateProfile = async (profileData) => {
+    try {
       updateApi({
         userId: authState.userId,
-        userName: profileData.name,
+        userName: profileData.userName,
         email: profileData.email,
       });
       setAuthState((prevState) => ({
         ...prevState,
-        userName: profileData.name,
+        userName: profileData.userName,
         email: profileData.email,
       }));
-      return true
+      return true;
     } catch (error) {
       console.log("プロフィール更新に失敗しました", error);
-      return false
+      return false;
     }
-  }
+  };
 
-
-  // サービス追加
-  const addService = (serviceName, accessToken, refreshToken) => {
-    setAuthState((prevState) => ({
-      ...prevState,
-      services: [
-        ...prevState.services,
-        {
-          name: serviceName,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        },
-      ],
-    }));
+  // Spotify連携処理: 認証コードをバックエンドへ送信
+  const connectSpotify = async (code) => {
+    try {
+      const response = await connectSpotifyApi(code);
+      if (response && response.success) {
+        // 連携成功なら authState の isSpotify を true に更新
+        setAuthState((prevState) => ({ ...prevState, isSpotify: true }));
+        console.log("Spotify連携に成功しました");
+      } else {
+        throw new Error("Spotify連携に失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to connect Spotify:", error);
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, addService }}>
+    <AuthContext.Provider
+      value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, connectSpotify }}
+    >
       {children}
     </AuthContext.Provider>
   );

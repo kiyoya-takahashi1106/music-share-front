@@ -11,8 +11,8 @@ const RoomsProvider = ({ children }) => {
   // ルーム情報を取得する関数
   const getPublicRooms = async () => {
     try {
-      const response = await fetchPublicRooms(); // importしたAPI関数を呼び出す
-      setRooms(response.rooms);  // 取得したルームデータをステートに保存
+      const response = await fetchPublicRooms(); // 返り値は { status, message, rooms: [...] }
+      setRooms(response.rooms);  // 各ルームはキャメルケース（roomId, roomName など）
     } catch (error) {
       console.error("Error fetching rooms:", error);
     }
