@@ -26,7 +26,7 @@ const AuthContext = createContext(null);
 const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState(initialAuthState);
   const router = useRouter();
-
+  
   // cookieからユーザー情報を取得
   const getUserInfo = async () => {
     try {
@@ -54,7 +54,6 @@ const AuthProvider = ({ children }) => {
       console.log("パスワードが一致しません");
       return false;
     }
-
     try {
       const response = await signUpApi(signUpInfo);
       if (response) {
@@ -115,12 +114,9 @@ const AuthProvider = ({ children }) => {
 
   // プロフィール更新
   const updateProfile = async (profileData) => {
+    console.log("updateProfile", profileData);
     try {
-      updateApi({
-        userId: authState.userId,
-        userName: profileData.userName,
-        email: profileData.email,
-      });
+      await updateApi( authState.userId, profileData.name, profileData.email );
       setAuthState((prevState) => ({
         ...prevState,
         userName: profileData.userName,
@@ -136,11 +132,12 @@ const AuthProvider = ({ children }) => {
   // Spotify連携処理: 認証コードをバックエンドへ送信
   const connectSpotify = async (code) => {
     try {
-      const response = await connectSpotifyApi(code);
-      if (response && response.success) {
+      const response = await connectSpotifyApi(authState.userId, code);
+      if (response.status==="success") {
         // 連携成功なら authState の isSpotify を true に更新
         setAuthState((prevState) => ({ ...prevState, isSpotify: true }));
         console.log("Spotify連携に成功しました");
+        return true;
       } else {
         throw new Error("Spotify連携に失敗しました");
       }

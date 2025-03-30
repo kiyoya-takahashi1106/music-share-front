@@ -167,6 +167,7 @@ const Header = () => {
   )
 }
 
+
 // Spotify連携バナーコンポーネント
 const SpotifyBanner = () => {
   const [isDismissed, setIsDismissed] = useState(false)

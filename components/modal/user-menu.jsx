@@ -123,13 +123,16 @@ const UserMenuModal = ({ isOpen, onClose }) => {
               </Link>
 
               <Link
-                href="/spotify-account"
+                href="/connected-account"
                 className="flex items-center gap-3 rounded-md px-4 py-3 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               >
                 <ListMusic size={20} />
                 <div>
                   <span className="text-base font-medium block">Spotifyアカウント</span>
-                  <span className="text-xs text-green-500">連携済み - タップして確認</span>
+                  {authState.isSpotify?
+                      <span className="text-xs text-green-500">連携済み</span>
+                    : 
+                      <span className="text-xs text-red-500">未連携</span>}
                 </div>
               </Link>
             </nav>
