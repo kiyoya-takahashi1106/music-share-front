@@ -3,7 +3,7 @@
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { getUserInfoApi, signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
-import { connectSpotifyApi } from "../lib/musicServiceLib";
+import { connectSpotifyApi, disconnectSpotifyApi } from "../lib/musicServiceLib";
 
 const initialAuthState = {
   isLogin: false,
@@ -15,6 +15,7 @@ const initialAuthState = {
   services: {
     spotify: {
       serviceUserId: null,
+      serviceUserName: null,
       encryptedAccessToken: null,
       expiresAt: null,
     },
@@ -147,14 +148,31 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const disconnectSpotify = async () => {
+    try {
+      const response = await disconnectSpotifyApi(authState.userId);
+      if (response.status === "success") {
+        setAuthState((prevState) => ({ ...prevState, isSpotify: false }));
+        console.log("Spotify連携解除に成功しました");
+        return true;
+      } else {
+        throw new Error("Spotify連携解除に失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to disconnect Spotify:", error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, connectSpotify }}
+      value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, connectSpotify, disconnectSpotify }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
 
 const useAuthState = () => {
   const context = useContext(AuthContext);
