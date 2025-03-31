@@ -43,6 +43,7 @@ const AuthProvider = ({ children }) => {
           services: response.services || {},
         });
       }
+      return response
     } catch (error) {
       router.push("/auth/sign-in");
       console.log("ユーザー情報の取得に失敗しました", error);

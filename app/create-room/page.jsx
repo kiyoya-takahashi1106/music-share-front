@@ -15,7 +15,7 @@ const CreateRoom = () => {
   const [genre, setGenre] = useState("")
   const [maxParticipants, setMaxParticipants] = useState(2)
   const router = useRouter();
-  const { authState } = useAuthState()
+  const { authState, getUserInfo } = useAuthState()
   const { createRoomData } = useMyRoomState()
 
   // プレイリスト関連の状態
@@ -25,63 +25,58 @@ const CreateRoom = () => {
   const [isPlaylistDropdownOpen, setIsPlaylistDropdownOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  // モックのプレイリストデータを読み込む
+  // spotify-apiを叩く
   useEffect(() => {
-    // 実際のアプリではSpotify APIからデータを取得する
-    const mockPlaylists = [
-      {
-        id: "1",
-        name: "お気に入りの曲",
-        imageUrl: "https://i.scdn.co/image/ab67706f00000002ca5a7517156021292e5663a4",
-        description: "よく聴く曲のコレクション",
-        firstSong: {
-          id: "3n3Ppam7vgaVa1iaRUc9Lp",
-          name: "お気に入りの一曲",
-        },
-      },
-      {
-        id: "2",
-        name: "J-POP ヒット曲",
-        imageUrl: "https://i.scdn.co/image/ab67706f000000025551996f500ba876bda73fa5",
-        description: "日本の最新ヒット曲",
-        firstSong: {
-          id: "7ouMYWpwJ422jRcDASZB7P",
-          name: "J-POPの代表曲",
-        },
-      },
-      {
-        id: "3",
-        name: "ワークアウト",
-        imageUrl: "https://i.scdn.co/image/ab67706f000000026b78142f31f3a7f7ea9566ca",
-        description: "運動中に聴くための曲",
-        firstSong: {
-          id: "0VjIjW4GlUZAMYd2vXMi3b",
-          name: "ワークアウトの一曲",
-        },
-      },
-      {
-        id: "4",
-        name: "ドライブミュージック",
-        imageUrl: "https://i.scdn.co/image/ab67706f00000002724554ed6bed6f051d9b0bfc",
-        description: "ドライブに最適な曲",
-        firstSong: {
-          id: "2X485T9Z5Ly0xyaghN73ed",
-          name: "ドライブにぴったりの曲",
-        },
-      },
-    ]
-    setPlaylists(mockPlaylists)
+    // ここでAPIからプレイリストを取得する処理を追加
+    const fetchPlaylists = async () => {
+      const result = await getUserInfo();
+      if (!result.isSpotify) {
+        console.error("Spotify service is not available");
+        return;
+      }
+
+      const encryptedAccessToken = result.services.spotify.encryptedAccessToken;
+      const accessToken = atob(encryptedAccessToken);
+
+      try {
+        const response = await fetch("https://api.spotify.com/v1/me/playlists", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },});
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch playlists");
+        }
+
+        const data = await response.json();
+        const playlists = data.items.map((playlist) => ({
+          id: playlist.id,
+          name: playlist.name,
+          // description: playlist.description || "No description available",
+          imageUrl: playlist.images[0]?.url || "/placeholder.svg",
+          firstSong: playlist.tracks?.items?.[0]?.track || { id: null, name: "Unknown" },
+        }));
+        console.log("Fetched Playlists:", playlists); 
+
+        setPlaylists(playlists);
+      } catch (error) {
+      console.error("Error fetching playlists:", error);
+      }
+    };
+
+    fetchPlaylists();
   }, [])
 
   // 検索結果をフィルタリング
   const filteredPlaylists =
-    searchTerm.trim() === ""
-      ? playlists
-      : playlists.filter(
-          (playlist) =>
-            playlist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            playlist.description.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
+    searchTerm.trim() === ""?
+      playlists
+    : 
+      playlists.filter(
+        (playlist) =>
+          playlist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          playlist.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -91,7 +86,6 @@ const CreateRoom = () => {
     }
   
     setIsLoading(true)
-  
     try {
       const newRoom = {
         roomName: roomName,
@@ -103,8 +97,8 @@ const CreateRoom = () => {
         hostUserName: authState.userName,
         playingPlaylistId: selectedPlaylist.id,
         playingPlaylistName: selectedPlaylist.name,
-        playingSongId: selectedPlaylist.firstSong.id,
-        playingSongName: selectedPlaylist.firstSong.name,
+        // playingSongId: selectedPlaylist.firstSong.id,
+        // playingSongName: selectedPlaylist.firstSong.name,
       }
       const reponceRoomId = await createRoomData(newRoom)
       router.push(`/room/${reponceRoomId}`)
