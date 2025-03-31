@@ -3,7 +3,7 @@
 import { useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { getUserInfoApi, signUpApi, loginApi, updateApi, logoutApi } from "../lib/authLib";
-import { connectSpotifyApi, disconnectSpotifyApi } from "../lib/musicServiceLib";
+import { connectSpotifyApi, disconnectSpotifyApi, refreshSpotifyTokenApi } from "../lib/musicServiceLib";
 
 const initialAuthState = {
   isLogin: false,
@@ -164,9 +164,34 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshSpotifyToken = async () => {
+    try {
+      const response = await refreshSpotifyTokenApi(authState.userId);
+      if (response.status === "success") {
+        setAuthState((prevState) => ({
+          ...prevState,
+          services: {
+            ...prevState.services,
+            spotify: {
+              ...prevState.services.spotify,
+              encryptedAccessToken: response.encryptedAccessToken,
+              expiresAt: response.expiresAt,
+            },
+          },
+        }));
+        console.log("Spotifyトークンの更新に成功しました");
+      } else {
+        throw new Error("Spotifyトークンの更新に失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to refresh Spotify token:", error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, connectSpotify, disconnectSpotify }}
+      value={{ authState, getUserInfo, SignUpFunction, loginFunction, updateProfile, logoutFunction, connectSpotify, disconnectSpotify, refreshSpotifyToken }}
     >
       {children}
     </AuthContext.Provider>

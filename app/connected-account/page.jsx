@@ -9,7 +9,7 @@ import Header from "@/components/header"
 
 export default function ConnectedAccountPage() {
   const router = useRouter()
-  const { authState, getUserInfo, disconnectSpotify } = useAuthState()
+  const { authState, getUserInfo, disconnectSpotify, refreshSpotifyToken } = useAuthState()
   const [isLoading, setIsLoading] = useState(false)
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
 
@@ -23,23 +23,32 @@ export default function ConnectedAccountPage() {
 
   // トークンの有効期限を計算
   const getTokenStatus = () => {
-    if (!authState.services?.spotify?.expiresAt) return { isValid: false, timeLeft: null }
-
-    const expiresAt = new Date(authState.services.spotify.expiresAt)
-    const now = new Date()
-    const timeLeftMs = expiresAt - now
-
-    // 残り時間を時間と分で表示
-    const hours = Math.floor(timeLeftMs / (1000 * 60 * 60))
-    const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60))
-
-    return {
-      isValid: timeLeftMs > 0,
-      timeLeft: timeLeftMs > 0 ? `${hours}時間${minutes}分` : null,
+    if (!authState.services?.spotify?.expiresAt) {
+      return { isValid: false, timeLeft: null };
     }
-  }
 
-  const tokenStatus = getTokenStatus()
+    // expiresAt は既に日本時間（Asia/Tokyo）の日時なので、そのまま Date でパースする
+    const expiresAt = new Date(authState.services.spotify.expiresAt);
+    console.log("dadadadwadadadwaa", authState)
+    console.log(authState.services.spotify.expiresAt)
+    console.log(expiresAt)
+    // 現在時刻（この環境のタイムゾーンが日本であれば、これも日本時刻になります）
+    const now = new Date();
+
+    // expiresAt - now の差から9時間分を引いて正しい残り時間を算出する
+    const timeLeftMs = (expiresAt - now) - (9 * 60 * 60 * 1000);
+
+    if (timeLeftMs <= 0) {
+      return { isValid: false, timeLeft: null };
+    }
+
+    const hours = Math.floor(timeLeftMs / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    return { isValid: true, timeLeft: `${hours}時間${minutes}分` };
+  };
+
+  const tokenStatus = getTokenStatus();
 
   // Spotifyの接続を解除
   const handleDisconnect = async () => {
@@ -58,10 +67,7 @@ export default function ConnectedAccountPage() {
   const handleRefreshToken = async () => {
     setIsLoading(true)
     try {
-      // 実際のアプリではAPIを呼び出してトークンを更新する処理が必要
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // モック処理
-
-      // 更新成功のフィードバック
+      await refreshSpotifyToken();
       alert("トークンが更新されました")
     } catch (error) {
       console.error("更新エラー:", error)
