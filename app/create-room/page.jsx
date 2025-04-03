@@ -67,6 +67,7 @@ const CreateRoom = () => {
     fetchPlaylists();
   }, [])
 
+
   // 検索結果をフィルタリング
   const filteredPlaylists =
     searchTerm.trim() === ""?
@@ -78,6 +79,7 @@ const CreateRoom = () => {
           playlist.description.toLowerCase().includes(searchTerm.toLowerCase()),
       )
 
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!selectedPlaylist) {
@@ -86,6 +88,47 @@ const CreateRoom = () => {
     }
   
     setIsLoading(true)
+
+    // プレイリストから楽曲情報を取得し、songs 変数にセットする
+    let songs = {};
+
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/playlists/${selectedPlaylist.id}/tracks`, {
+        headers: {
+          Authorization: `Bearer ${atob(authState.services.spotify.encryptedAccessToken)}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch songs from the playlist");
+      }
+
+      const data = await response.json();
+      songs = data.items.reduce((acc, item, index) => {
+        // item.track が存在しない場合を考慮
+        if (!item.track) {
+          console.warn(`Track data is missing for item at index ${index}`);
+          return acc;
+        }
+    
+        acc[index + 1] = {
+          songId: item.track.id || "unknown", // IDがない場合のフォールバック
+          songName: item.track.name || "Unknown Song", // 曲名がない場合のフォールバック
+          artist: item.track.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist", // アーティスト名がない場合のフォールバック
+          songLength: item.track.duration_ms || 0, // 再生時間がない場合のフォールバック
+          songImageUrl: item.track.album?.images?.[0]?.url || "/placeholder.svg", // アルバム画像がない場合のフォールバック
+        };
+        return acc;
+      }, {});
+      
+      console.log("Fetched Songs:", songs);
+    } catch (error) {
+      console.error("Error fetching songs:", error);
+      alert("プレイリストの曲を取得できませんでした");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const newRoom = {
         roomName: roomName,
@@ -97,15 +140,17 @@ const CreateRoom = () => {
         hostUserName: authState.userName,
         playingPlaylistId: selectedPlaylist.id,
         playingPlaylistName: selectedPlaylist.name,
-        // playingSongId: selectedPlaylist.firstSong.id,
-        // playingSongName: selectedPlaylist.firstSong.name,
-      }
-      const reponceRoomId = await createRoomData(newRoom)
-      router.push(`/room/${reponceRoomId}`)
+        playingSongId: songs[1].songId,
+        playingSongName: songs[1].songName,
+        songs: songs
+      };
+
+      const roomId = await createRoomData(newRoom);
+      router.push(`/room/${roomId}`);
     } catch (error) {
-      console.error("Room creation failed:", error)
+      console.error("Room creation failed:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

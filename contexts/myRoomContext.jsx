@@ -34,12 +34,14 @@ const MyRoomProvider = ({ children }) => {
     playingSongId: null,
     updateSongAt: null,
     participants: [],
+    songs: {},
   });
 
   // ルーム詳細を取得
   const getRoomDetails = async (roomId) => {
     try {
       const roomData = await getRoomDetail(roomId);
+      console.log("とったどおおおおお!!!", roomData);
       setRoom({ isJoined: true, ...roomData });
     } catch (error) {
       console.error("Error fetching room details:", error);
