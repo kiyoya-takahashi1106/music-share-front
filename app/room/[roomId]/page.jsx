@@ -88,20 +88,6 @@ const RoomPage = () => {
     return colors[index]
   }
 
-  // 参加者リストの生成（roomData がある場合、本データの形式に合わせて生成）
-  // const participants = [
-  //   {
-  //     id: room.host.hostId,
-  //     name: room.host.hostName,
-  //     isHost: true,
-  //   },
-  //   ...((room.participants || []).map((p) => ({
-  //     id: p.userId,
-  //     name: p.username,
-  //     isHost: false,
-  //   }))),
-  // ]
-
   // 現在再生中の曲情報（デモ用）
   const currentSong = {
     title: room?.playingSongName || "Shape of You",
@@ -113,13 +99,7 @@ const RoomPage = () => {
   // プレイリスト情報（デモ用）
   const playlist = {
     name: room?.playingPlaylistName || "トップヒット曲",
-    songs: [
-      { id: 1, title: "Shape of You", artist: "Ed Sheeran", duration: "3:53", isPlaying: true },
-      { id: 2, title: "Blinding Lights", artist: "The Weeknd", duration: "3:20" },
-      { id: 3, title: "Dance Monkey", artist: "Tones and I", duration: "3:29" },
-      { id: 4, title: "Someone You Loved", artist: "Lewis Capaldi", duration: "3:02" },
-      { id: 5, title: "Bad Guy", artist: "Billie Eilish", duration: "3:14" },
-    ],
+    songs: room.songs || {}
   }
 
   return (
@@ -238,19 +218,16 @@ const RoomPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {playlist.songs.map((song, index) => (
-                      <tr key={song.id} className={`hover:bg-zinc-700 ${song.isPlaying ? "bg-zinc-700/50" : ""}`}>
-                        <td className="p-3 text-zinc-400">{index + 1}</td>
+                    {Object.entries(playlist.songs).map(([key, song]) => (
+                      <tr key={key} className={`hover:bg-zinc-700`}>
+                        <td className="p-3 text-zinc-400">{key}</td>
                         <td className="p-3">
                           <div className="flex items-center">
-                            {song.isPlaying && (
-                              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                            )}
-                            <span className={song.isPlaying ? "text-green-500" : ""}>{song.title}</span>
+                            <span>{song.songName}</span>
                           </div>
                         </td>
                         <td className="p-3 text-zinc-400 hidden md:table-cell">{song.artist}</td>
-                        <td className="p-3 text-zinc-400 text-right">{song.duration}</td>
+                        <td className="p-3 text-zinc-400 text-right">{formatTime(song.songLength / 1000)}</td>
                       </tr>
                     ))}
                   </tbody>

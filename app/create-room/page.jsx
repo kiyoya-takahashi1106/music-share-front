@@ -138,10 +138,9 @@ const CreateRoom = () => {
         maxParticipants: maxParticipants,
         hostUserId: authState.userId,
         hostUserName: authState.userName,
-        playingPlaylistId: selectedPlaylist.id,
         playingPlaylistName: selectedPlaylist.name,
-        playingSongId: songs[1].songId,
         playingSongName: songs[1].songName,
+        playingSongIndex: 1,
         songs: songs
       };
 

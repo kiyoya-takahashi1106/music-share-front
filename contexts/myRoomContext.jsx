@@ -30,8 +30,7 @@ const MyRoomProvider = ({ children }) => {
     // playing_service: null,
     // ここからはredisにもらうデータ
     roomStatus: null,
-    playingPlaylistId: null,
-    playingSongId: null,
+    playingSongIndex: null,
     updateSongAt: null,
     participants: [],
     songs: {},
